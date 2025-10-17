@@ -1,1 +1,81 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- HUD Principal -->
+    <div id="radioHUD">
+        <div class="hud-header">Throat Mic Pro</div>
+        
+        <div class="hud-item">
+            <span class="hud-label">Frecuencia:</span>
+            <span id="frequency" class="hud-value">1</span>
+        </div>
+        
+        <div class="hud-item">
+            <span class="hud-label">Batería:</span>
+            <span id="battery" class="hud-value battery-high">100%</span>
+        </div>
+        
+        <div id="mutedStatus" class="hud-item muted" style="display: none;">
+            <span class="hud-label">Estado:</span>
+            <span class="hud-value">MUTED</span>
+        </div>
+        
+        <div id="transmittingStatus" class="ptt-indicator">
+            Transmitiendo...
+        </div>
+    </div>
+
+    <!-- Menú de Frecuencias -->
+    <div id="frequencyMenu" class="frequency-menu">
+        <div class="menu-header">
+            <h3>🎯 FRECUENCIAS DISPONIBLES</h3>
+            <div class="menu-subtitle">Selecciona una frecuencia para conectar</div>
+        </div>
+        
+        <div class="menu-content">
+            <!-- Frecuencias Públicas -->
+            <div class="frequency-group" id="publicFreqs">
+                <h4>📢 FRECUENCIAS PÚBLICAS</h4>
+                <div class="frequencies-list" id="publicList"></div>
+            </div>
+            
+            <!-- Frecuencias de Facción -->
+            <div class="frequency-group" id="factionFreqs" style="display: none;">
+                <h4>👥 FRECUENCIA DE FACCIÓN</h4>
+                <div class="frequencies-list" id="factionList"></div>
+            </div>
+            
+            <!-- Frecuencias Personalizadas -->
+            <div class="frequency-group" id="customFreqs" style="display: none;">
+                <h4>🔐 FRECUENCIAS PERSONALES</h4>
+                <div class="frequencies-list" id="customList"></div>
+            </div>
+        </div>
+        
+        <div class="menu-footer">
+            <p>• Mantén <strong>SHIFT</strong> para hablar • <strong>F1</strong> para apagar •</p>
+        </div>
+    </div>
+
+    <!-- Modal para Contraseña -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h4>🔒 FRECUENCIA PROTEGIDA</h4>
+            <p>Ingresa la contraseña para la frecuencia <span id="protectedFreq" class="freq-number"></span></p>
+            <input type="text" id="passwordInput" placeholder="Contraseña" autocomplete="off">
+            <div class="modal-buttons">
+                <button onclick="joinWithPassword()" class="btn-confirm">Unirse</button>
+                <button onclick="closeModal()" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
