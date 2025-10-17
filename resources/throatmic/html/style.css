@@ -1,1 +1,295 @@
+/* HUD Principal */
+#radioHUD {
+    position: absolute;
+    top: 150px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    border: 2px solid #27ae60;
+    min-width: 160px;
+    display: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
 
+.hud-header {
+    color: #27ae60;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hud-item {
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hud-label {
+    color: #bdc3c7;
+    font-weight: 500;
+}
+
+.hud-value {
+    color: #ecf0f1;
+    font-weight: bold;
+}
+
+.battery-low { 
+    color: #e74c3c; 
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
+
+.battery-medium { color: #f39c12; }
+.battery-high { color: #2ecc71; }
+
+.muted { 
+    color: #e74c3c; 
+    font-weight: bold;
+}
+
+.transmitting { 
+    color: #f39c12; 
+    animation: blink 1s infinite;
+    font-weight: bold;
+}
+
+.ptt-indicator {
+    text-align: center;
+    margin-top: 8px;
+    padding: 6px;
+    border-radius: 6px;
+    background: rgba(243, 156, 18, 0.3);
+    display: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 11px;
+    border: 1px solid #f39c12;
+}
+
+/* Menú de Frecuencias */
+.frequency-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.98);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    font-family: 'Segoe UI', sans-serif;
+    width: 450px;
+    max-width: 90vw;
+    display: none;
+    box-shadow: 0 0 40px rgba(0,0,0,0.9);
+    backdrop-filter: blur(15px);
+    border: 2px solid #3498db;
+    z-index: 1000;
+}
+
+.menu-header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #34495e;
+    padding-bottom: 15px;
+}
+
+.menu-header h3 {
+    color: #3498db;
+    margin: 0 0 8px 0;
+    font-size: 18px;
+}
+
+.menu-subtitle {
+    color: #95a5a6;
+    font-size: 12px;
+}
+
+.frequency-group {
+    margin-bottom: 25px;
+}
+
+.frequency-group h4 {
+    color: #f39c12;
+    margin-bottom: 12px;
+    font-size: 14px;
+    border-left: 3px solid #f39c12;
+    padding-left: 10px;
+}
+
+.frequencies-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.freq-btn {
+    background: #2c3e50;
+    color: white;
+    border: 2px solid #34495e;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    min-width: 60px;
+    text-align: center;
+}
+
+.freq-btn:hover {
+    background: #3498db;
+    border-color: #3498db;
+    transform: translateY(-2px);
+}
+
+.freq-btn.locked {
+    background: #7f8c8d;
+    border-color: #95a5a6;
+    position: relative;
+}
+
+.freq-btn.locked::after {
+    content: " 🔒";
+}
+
+.freq-btn.current {
+    background: #27ae60;
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+
+.menu-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #34495e;
+    color: #bdc3c7;
+    font-size: 12px;
+}
+
+.menu-footer strong {
+    color: #3498db;
+}
+
+/* Modal de Contraseña */
+.modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.98);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid #e74c3c;
+    display: none;
+    z-index: 1001;
+    width: 350px;
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.3);
+    backdrop-filter: blur(15px);
+}
+
+.modal-content h4 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.modal-content p {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #bdc3c7;
+}
+
+.freq-number {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.modal-content input {
+    width: 100%;
+    background: #2c3e50;
+    border: 2px solid #34495e;
+    border-radius: 6px;
+    padding: 12px;
+    color: white;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.modal-content input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #2ecc71;
+}
+
+.btn-cancel {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #7f8c8d;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-height: 768px) {
+    .frequency-menu {
+        padding: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .frequency-group {
+        margin-bottom: 15px;
+    }
+}
