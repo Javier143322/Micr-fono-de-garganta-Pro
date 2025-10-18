@@ -1,10 +1,9 @@
-
 fx_version 'cerulean'
 game 'gta5'
 
 author 'TuServidor'
-description 'Sistema Throat Mic Pro - Comunicación Táctica'
-version '3.0.0'
+description 'Sistema Integrado Throat Mic Pro + Corporate Elite'
+version '5.0.0'
 
 ui_page 'html/throatmic.html'
 
@@ -19,6 +18,7 @@ server_scripts {
 
 files {
     'html/throatmic.html',
+    'html/corporate.html',
     'html/style.css',
     'html/script.js'
 }
