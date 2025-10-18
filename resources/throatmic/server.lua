@@ -1,122 +1,19 @@
-
 local ESX = exports["es_extended"]:getSharedObject()
 
--- Configuración de frecuencias por facción
+-- ==================== SISTEMA THROAT MIC ====================
 local FactionFrequencies = {
-    -- FACCIÓN POLICIAL
-    police = {
-        name = "Policía",
-        frequencies = {1, 2, 3},
-        type = "official"
-    },
-    sheriff = {
-        name = "Sheriff", 
-        frequencies = {4, 5},
-        type = "official"
-    },
-    state = {
-        name = "Policía Estatal",
-        frequencies = {6, 7},
-        type = "official"
-    },
-    
-    -- FACCIÓN MÉDICA
-    ambulance = {
-        name = "EMS",
-        frequencies = {10, 11},
-        type = "official"
-    },
-    
-    -- MECÁNICOS
-    mechanic = {
-        name = "Mecánicos",
-        frequencies = {20},
-        type = "civil"
-    },
-    
-    -- MAFIAS ORGANIZADAS
-    mafia = {
-        name = "Mafia",
-        frequencies = {30, 31, 32},
-        type = "mafia"
-    },
-    cartel = {
-        name = "Cartel",
-        frequencies = {33, 34, 35},
-        type = "mafia" 
-    },
-    yakuza = {
-        name = "Yakuza",
-        frequencies = {36, 37},
-        type = "mafia"
-    },
-    
-    -- GRUPOS ÉLITE
-    swat = {
-        name = "SWAT",
-        frequencies = {40, 41},
-        type = "elite",
-        password = "swat123"
-    },
-    army = {
-        name = "Ejército",
-        frequencies = {42, 43},
-        type = "elite", 
-        password = "army123"
-    },
-    security = {
-        name = "Seguridad Élite",
-        frequencies = {44},
-        type = "elite",
-        password = "secure123"
-    },
-    
-    -- BANDAS CALLEJERAS
-    ballas = {
-        name = "Ballas",
-        frequencies = {50},
-        type = "gang"
-    },
-    families = {
-        name = "Families", 
-        frequencies = {51},
-        type = "gang"
-    },
-    vagos = {
-        name = "Vagos",
-        frequencies = {52},
-        type = "gang"
-    },
-    lostmc = {
-        name = "Lost MC",
-        frequencies = {53},
-        type = "gang"
-    },
-    
-    -- GRUPOS SANGUINARIOS
-    bloods = {
-        name = "Bloods",
-        frequencies = {60},
-        type = "blood",
-        password = "blood123"
-    },
-    crips = {
-        name = "Crips",
-        frequencies = {61},
-        type = "blood", 
-        password = "crip123"
-    },
-    maras = {
-        name = "Maras",
-        frequencies = {62},
-        type = "blood",
-        password = "mara123"
-    }
+    police = {1, 2, 3},
+    ambulance = {4, 5},
+    mechanic = {6},
+    mafia = {30, 31, 32},
+    cartel = {33, 34, 35},
+    ballas = {50},
+    families = {51},
+    vagos = {52},
+    lostmc = {53}
 }
 
--- Tablas de la base de datos
 MySQL.ready(function()
-    -- Tabla principal de usuarios
     MySQL.Async.execute([[
         CREATE TABLE IF NOT EXISTS `player_throat_mics` (
             `identifier` varchar(50) NOT NULL,
@@ -128,7 +25,6 @@ MySQL.ready(function()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ]], {})
     
-    -- Tabla de frecuencias personalizadas
     MySQL.Async.execute([[
         CREATE TABLE IF NOT EXISTS `custom_frequencies` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -141,110 +37,7 @@ MySQL.ready(function()
     ]], {})
 end)
 
--- Obtener frecuencias disponibles para el jugador
-ESX.RegisterServerCallback('throatmic:getAvailableFrequencies', function(source, cb)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    local playerJob = xPlayer.job.name
-    local availableFreqs = {}
-    
-    -- Añadir frecuencias públicas
-    availableFreqs.public = {
-        name = "Frecuencias Públicas",
-        frequencies = {1, 2, 3, 4, 5, 6, 7, 10, 11, 20},
-        type = "public"
-    }
-    
-    -- Añadir frecuencias según la facción del jugador
-    for faction, data in pairs(FactionFrequencies) do
-        if faction == playerJob then
-            availableFreqs.faction = {
-                name = data.name,
-                frequencies = data.frequencies,
-                type = data.type,
-                password = data.password
-            }
-            break
-        end
-    end
-    
-    -- Obtener frecuencias personalizadas del jugador
-    MySQL.Async.fetchAll('SELECT * FROM custom_frequencies WHERE owner_identifier = @identifier', {
-        ['@identifier'] = xPlayer.identifier
-    }, function(result)
-        if result and #result > 0 then
-            availableFreqs.custom = {
-                name = "Frecuencias Personales",
-                frequencies = {},
-                type = "custom"
-            }
-            for _, freq in ipairs(result) do
-                table.insert(availableFreqs.custom.frequencies, {
-                    number = freq.frequency,
-                    password = freq.password,
-                    name = freq.faction_name
-                })
-            end
-        end
-        
-        cb(availableFreqs)
-    end)
-end)
-
--- Crear frecuencia personalizada
-ESX.RegisterServerCallback('throatmic:createCustomFrequency', function(source, cb, frequency, password, name)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    
-    -- Verificar si la frecuencia está disponible
-    if frequency < 100 or frequency > 999 then
-        cb({success = false, message = "La frecuencia debe estar entre 100 y 999"})
-        return
-    end
-    
-    -- Verificar si ya existe
-    MySQL.Async.fetchAll('SELECT * FROM custom_frequencies WHERE frequency = @freq', {
-        ['@freq'] = frequency
-    }, function(result)
-        if result and #result > 0 then
-            cb({success = false, message = "Esta frecuencia ya está en uso"})
-        else
-            -- Crear frecuencia personalizada
-            MySQL.Async.execute(
-                'INSERT INTO custom_frequencies (owner_identifier, frequency, password, faction_name) VALUES (@owner, @freq, @pass, @name)',
-                {
-                    ['@owner'] = xPlayer.identifier,
-                    ['@freq'] = frequency,
-                    ['@pass'] = password,
-                    ['@name'] = name
-                },
-                function(rowsChanged)
-                    cb({success = true, message = "Frecuencia " .. frequency .. " creada exitosamente"})
-                end
-            )
-        end
-    end)
-end)
-
--- Unirse a frecuencia con contraseña
-ESX.RegisterServerCallback('throatmic:joinFrequencyWithPassword', function(source, cb, frequency, password)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    
-    MySQL.Async.fetchAll('SELECT * FROM custom_frequencies WHERE frequency = @freq', {
-        ['@freq'] = frequency
-    }, function(result)
-        if result and #result > 0 then
-            local freqData = result[1]
-            if freqData.password == nil or freqData.password == password then
-                cb({success = true, message = "Conectado a frecuencia " .. frequency})
-            else
-                cb({success = false, message = "Contraseña incorrecta"})
-            end
-        else
-            cb({success = false, message = "Frecuencia no encontrada"})
-        end
-    end)
-end)
-
--- Sistema de datos del jugador
+-- Throat Mic: Cargar datos jugador
 RegisterNetEvent('throatmic:loadPlayerData')
 AddEventHandler('throatmic:loadPlayerData', function()
     local src = source
@@ -272,6 +65,7 @@ AddEventHandler('throatmic:loadPlayerData', function()
     end
 end)
 
+-- Throat Mic: Actualizar datos
 RegisterNetEvent('throatmic:updatePlayerData')
 AddEventHandler('throatmic:updatePlayerData', function(battery, frequency, pttType, muted)
     local src = source
@@ -291,6 +85,7 @@ AddEventHandler('throatmic:updatePlayerData', function(battery, frequency, pttTy
     end
 end)
 
+-- Throat Mic: Callbacks
 ESX.RegisterServerCallback('throatmic:getPlayerData', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     
@@ -314,6 +109,68 @@ ESX.RegisterServerCallback('throatmic:getPlayerData', function(source, cb)
     end
 end)
 
+ESX.RegisterServerCallback('throatmic:getAvailableFrequencies', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerJob = xPlayer.job.name
+    local availableFreqs = {}
+    
+    availableFreqs.public = {
+        name = "Frecuencias Públicas",
+        frequencies = {1, 2, 3, 4, 5, 6, 7, 10, 11, 20},
+        type = "public"
+    }
+    
+    for faction, freqs in pairs(FactionFrequencies) do
+        if faction == playerJob then
+            availableFreqs.faction = {
+                name = "Frecuencia de Facción",
+                frequencies = freqs,
+                type = "faction"
+            }
+            break
+        end
+    end
+    
+    MySQL.Async.fetchAll('SELECT * FROM custom_frequencies WHERE owner_identifier = @identifier', {
+        ['@identifier'] = xPlayer.identifier
+    }, function(result)
+        if result and #result > 0 then
+            availableFreqs.custom = {
+                name = "Frecuencias Personales",
+                frequencies = {},
+                type = "custom"
+            }
+            for _, freq in ipairs(result) do
+                table.insert(availableFreqs.custom.frequencies, {
+                    number = freq.frequency,
+                    password = freq.password,
+                    name = freq.faction_name
+                })
+            end
+        end
+        cb(availableFreqs)
+    end)
+end)
+
+ESX.RegisterServerCallback('throatmic:joinFrequencyWithPassword', function(source, cb, frequency, password)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    
+    MySQL.Async.fetchAll('SELECT * FROM custom_frequencies WHERE frequency = @freq', {
+        ['@freq'] = frequency
+    }, function(result)
+        if result and #result > 0 then
+            local freqData = result[1]
+            if freqData.password == nil or freqData.password == password then
+                cb({success = true, message = "Conectado a frecuencia " .. frequency})
+            else
+                cb({success = false, message = "Contraseña incorrecta"})
+            end
+        else
+            cb({success = false, message = "Frecuencia no encontrada"})
+        end
+    end)
+end)
+
 ESX.RegisterServerCallback('throatmic:getPlayerFaction', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     cb(xPlayer.job.name)
@@ -321,4 +178,161 @@ end)
 
 ESX.RegisterUsableItem('throatmic', function(source)
     TriggerClientEvent('throatmic:useItem', source)
+end)
+
+-- ==================== SISTEMA CORPORATE ÉLITE ====================
+local CorporateFactions = {
+    police = {
+        name = "DEPARTAMENTO DE POLICÍA",
+        type = "legal",
+        services = {
+            {id = 1, name = "VIGILANCIA AVANZADA", price = 5000, legal = true},
+            {id = 2, name = "INTERVENCION COMUNICACIONES", price = 10000, legal = true},
+            {id = 3, name = "RASTREO VEHICULAR", price = 7500, legal = true}
+        }
+    },
+    ambulance = {
+        name = "SERVICIOS MÉDICOS DE EMERGENCIA", 
+        type = "legal",
+        services = {
+            {id = 1, name = "RESPUESTA RÁPIDA ÉLITE", price = 3000, legal = true},
+            {id = 2, name = "TRANSPORTE MÉDICO ESPECIAL", price = 5000, legal = true}
+        }
+    },
+    mafia = {
+        name = "ORGANIZACIÓN MAFIOSA",
+        type = "illegal", 
+        services = {
+            {id = 1, name = "ELIMINACIÓN DE EVIDENCIAS", price = 25000, legal = false},
+            {id = 2, name = "TRANSPORTE CLANDESTINO", price = 15000, legal = false},
+            {id = 3, name = "PROTECCIÓN ARMADA", price = 30000, legal = false}
+        }
+    },
+    cartel = {
+        name = "CARTEL DE LA DROGA",
+        type = "illegal",
+        services = {
+            {id = 1, name = "DISTRIBUCIÓN SEGURA", price = 35000, legal = false},
+            {id = 2, name = "LABORATORIO MÓVIL", price = 50000, legal = false}
+        }
+    },
+    ballas = {
+        name = "BANDA ORGANIZADA BALLAS",
+        type = "illegal",
+        services = {
+            {id = 1, name = "CONTROL TERRITORIAL", price = 15000, legal = false},
+            {id = 2, name = "PROTECCIÓN EXTORSIVA", price = 12000, legal = false}
+        }
+    },
+    families = {
+        name = "FAMILIAS ORGANIZADAS",
+        type = "illegal",
+        services = {
+            {id = 1, name = "RED DE INFORMANTES", price = 18000, legal = false},
+            {id = 2, name = "SISTEMA DE EVASIÓN", price = 22000, legal = false}
+        }
+    }
+}
+
+local eliteTransactions = {}
+
+ESX.RegisterServerCallback('corporate:checkAccess', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerJob = xPlayer.job.name
+    
+    if CorporateFactions[playerJob] then
+        cb({
+            hasAccess = true,
+            factionData = CorporateFactions[playerJob],
+            playerMoney = xPlayer.getAccount('money').money,
+            playerBank = xPlayer.getAccount('bank').money
+        })
+    else
+        cb({hasAccess = false})
+    end
+end)
+
+ESX.RegisterServerCallback('corporate:processService', function(source, cb, serviceId, finishingOptions)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerJob = xPlayer.job.name
+    
+    if not CorporateFactions[playerJob] then
+        cb({success = false, message = "Acceso denegado"})
+        return
+    end
+    
+    local faction = CorporateFactions[playerJob]
+    local service = nil
+    
+    for _, s in ipairs(faction.services) do
+        if s.id == serviceId then
+            service = s
+            break
+        end
+    end
+    
+    if not service then
+        cb({success = false, message = "Servicio no disponible"})
+        return
+    end
+    
+    local basePrice = service.price
+    local finishingCost = 0
+    
+    if finishingOptions then
+        if finishingOptions.urgency then finishingCost = finishingCost + 5000 end
+        if finishingOptions.discretion then finishingCost = finishingCost + 8000 end
+        if finishingOptions.premium then finishingCost = finishingCost + 12000 end
+    end
+    
+    local totalCost = basePrice + finishingCost
+    
+    if xPlayer.getAccount('money').money < totalCost then
+        cb({success = false, message = "Fondos insuficientes"})
+        return
+    end
+    
+    xPlayer.removeAccountMoney('money', totalCost)
+    
+    local transactionId = #eliteTransactions + 1
+    eliteTransactions[transactionId] = {
+        id = transactionId,
+        player = xPlayer.identifier,
+        service = service.name,
+        faction = faction.name,
+        amount = totalCost,
+        timestamp = os.time()
+    }
+    
+    ExecuteService(xPlayer.source, service, finishingOptions)
+    
+    cb({
+        success = true, 
+        message = "Servicio ejecutado: " .. service.name,
+        amount = totalCost,
+        transactionId = transactionId
+    })
+end)
+
+function ExecuteService(playerSource, service, finishingOptions)
+    if service.name == "VIGILANCIA AVANZADA" then
+        TriggerClientEvent('corporate:startSurveillance', playerSource)
+    elseif service.name == "ELIMINACIÓN DE EVIDENCIAS" then
+        TriggerClientEvent('corporate:cleanEvidence', playerSource)
+    elseif service.name == "CONTROL TERRITORIAL" then
+        TriggerClientEvent('corporate:territoryControl', playerSource)
+    end
+end
+
+ESX.RegisterServerCallback('corporate:getTransactionHistory', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerTransactions = {}
+    
+    for _, transaction in pairs(eliteTransactions) do
+        if transaction.player == xPlayer.identifier then
+            table.insert(playerTransactions, transaction)
+        end
+    end
+    
+    cb(playerTransactions)
 end)
