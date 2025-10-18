@@ -1,7 +1,6 @@
-
 local ESX = exports["es_extended"]:getSharedObject()
 
--- Variables locales
+-- ==================== SISTEMA THROAT MIC ====================
 local throatMicEquipped = false
 local currentFrequency = 1
 local batteryLevel = 100
@@ -12,13 +11,12 @@ local pttCooldown = 100
 local batteryConsumption = nil
 local availableFrequencies = {}
 
--- Configuración SUPER SIMPLE
 local Config = {
-    PTTKey = 21, -- SHIFT IZQUIERDO (botón fácil para hablar)
-    ToggleKey = 288, -- F1 para activar/desactivar
+    PTTKey = 0x76, -- V
+    ToggleKey = 0x49, -- F
+    ActivateCommand = 'throatmic'
 }
 
--- Función para actualizar HUD
 function updateRadioHUD()
     if throatMicEquipped and radioHUD then
         SendNUIMessage({
@@ -33,7 +31,6 @@ function updateRadioHUD()
     end
 end
 
--- Función para consumir batería
 function consumeBattery()
     if throatMicEquipped and batteryLevel > 0 then
         batteryLevel = batteryLevel - 1
@@ -45,7 +42,6 @@ function consumeBattery()
     end
 end
 
--- Sincronizar con pma-voice
 function setVoiceChannel(channel)
     if channel ~= nil then
         exports['pma-voice']:setRadioChannel(channel)
@@ -54,12 +50,10 @@ function setVoiceChannel(channel)
     end
 end
 
--- Sonido de click de radio
 function playRadioClick()
     PlaySoundFrontend(-1, "CLICK_BACK", "TOGGLE_INPUT_SOUNDSET", true)
 end
 
--- Estado principal del Throat Mic
 function setThroatMicState(state)
     throatMicEquipped = state
     
@@ -67,7 +61,6 @@ function setThroatMicState(state)
         radioHUD = true
         setVoiceChannel(currentFrequency)
         
-        -- Cargar y mostrar frecuencias automáticamente
         ESX.TriggerServerCallback('throatmic:getAvailableFrequencies', function(freqs)
             availableFrequencies = freqs
             SendNUIMessage({
@@ -77,20 +70,18 @@ function setThroatMicState(state)
             })
         end)
         
-        -- Iniciar consumo de batería
         if batteryConsumption then
             ClearInterval(batteryConsumption)
         end
         batteryConsumption = SetInterval(consumeBattery, 60000)
         
-        ESX.ShowNotification("🎤 ~g~Throat Mic ACTIVADO~s~\nMantén ~y~SHIFT~s~ para hablar")
+        ESX.ShowNotification("🎤 ~g~Throat Mic ACTIVADO~s~\nMantén ~y~V~s~ para hablar")
         
     else
         radioHUD = false
         setVoiceChannel(nil)
         SendNUIMessage({action = 'hideFrequencyMenu'})
         
-        -- Detener consumo de batería
         if batteryConsumption then
             ClearInterval(batteryConsumption)
             batteryConsumption = nil
@@ -101,7 +92,6 @@ function setThroatMicState(state)
     updateRadioHUD()
 end
 
--- Cargar datos del jugador
 RegisterNetEvent('throatmic:loadData')
 AddEventHandler('throatmic:loadData', function(data)
     batteryLevel = data.battery
@@ -109,7 +99,6 @@ AddEventHandler('throatmic:loadData', function(data)
     micMuted = data.mic_muted
 end)
 
--- Usar item del Throat Mic (SUPER SIMPLE)
 RegisterNetEvent('throatmic:useItem')
 AddEventHandler('throatmic:useItem', function()
     if not throatMicEquipped then
@@ -127,19 +116,17 @@ AddEventHandler('throatmic:useItem', function()
     end
 end)
 
--- Comando de activación SIMPLE
 RegisterCommand('throatmic', function()
     TriggerEvent('throatmic:useItem')
 end, false)
 
-RegisterKeyMapping('throatmic', 'Activar/Desactivar Throat Mic', 'keyboard', 'F1')
+RegisterKeyMapping('throatmic', 'Activar/Desactivar Throat Mic', 'keyboard', 'F')
 
--- Sistema PTT SIMPLIFICADO - UN SOLO BOTÓN PARA HABLAR
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
         if throatMicEquipped and not micMuted then
-            if IsControlPressed(0, Config.PTTKey) then -- SHIFT presionado
+            if IsControlPressed(0, Config.PTTKey) then
                 if GetGameTimer() - lastPTTTime > pttCooldown then
                     lastPTTTime = GetGameTimer()
                     exports['pma-voice']:setRadioVoice(true)
@@ -154,7 +141,6 @@ Citizen.CreateThread(function()
     end
 end)
 
--- Eventos NUI para manejar frecuencias
 RegisterNUICallback('selectFrequency', function(data, cb)
     currentFrequency = data.frequency
     setVoiceChannel(currentFrequency)
@@ -181,16 +167,98 @@ RegisterNUICallback('hideMenu', function(data, cb)
     cb('ok')
 end)
 
--- Cerrar menú al moverse o disparar
-Citizen.CreateThread(function()
-    while true do
-        Citizen.Wait(100)
-        if throatMicEquipped then
-            if IsPedRunning(PlayerPedId()) or IsPedShooting(PlayerPedId()) or IsPedInAnyVehicle(PlayerPedId(), false) then
-                SendNUIMessage({action = 'hideFrequencyMenu'})
-            end
+-- ==================== SISTEMA CORPORATE ÉLITE ====================
+local corporateAccess = false
+local corporateData = nil
+
+RegisterCommand('corporate', function()
+    CheckCorporateAccess()
+end, false)
+
+RegisterKeyMapping('corporate', 'Sistema Corporate Élite', 'keyboard', 'G')
+
+function CheckCorporateAccess()
+    ESX.TriggerServerCallback('corporate:checkAccess', function(result)
+        if result.hasAccess then
+            corporateAccess = true
+            corporateData = result
+            OpenCorporateMenu()
+            ESX.ShowNotification("~g~SISTEMA CORPORATE ÉLITE~s~ - Acceso autorizado")
+        else
+            ESX.ShowNotification("~r~ACCESO DENEGADO~s~\nNo tienes permisos para el sistema corporate")
         end
+    end)
+end
+
+function OpenCorporateMenu()
+    SendNUIMessage({
+        action = 'showCorporateMenu',
+        factionData = corporateData.factionData,
+        playerMoney = corporateData.playerMoney,
+        playerBank = corporateData.playerBank
+    })
+    SetNuiFocus(true, true)
+end
+
+function SelectCorporateService(serviceId, finishing)
+    ESX.TriggerServerCallback('corporate:processService', function(result)
+        if result.success then
+            ESX.ShowNotification("~g~SERVICIO EJECUTADO~s~\n" .. result.message .. "\nCosto: ~g~$" .. result.amount)
+        else
+            ESX.ShowNotification("~r~ERROR~s~\n" .. result.message)
+        end
+    end, serviceId, finishing)
+end
+
+RegisterNUICallback('corporateSelectService', function(data, cb)
+    SelectCorporateService(data.serviceId, data.finishingOptions)
+    cb('ok')
+end)
+
+RegisterNUICallback('corporateClose', function(data, cb)
+    SetNuiFocus(false, false)
+    corporateAccess = false
+    cb('ok')
+end)
+
+RegisterNUICallback('corporateGetHistory', function(data, cb)
+    ESX.TriggerServerCallback('corporate:getTransactionHistory', function(history)
+        cb(history)
+    end)
+end)
+
+RegisterNUICallback('corporateEmergency', function(data, cb)
+    if throatMicEquipped then
+        currentFrequency = 911
+        setVoiceChannel(currentFrequency)
+        ESX.ShowNotification("~y~EMERGENCIA CORPORATE~s~ - Canal de emergencia activado")
     end
+    cb('ok')
+end)
+
+-- Eventos de servicios Corporate
+RegisterNetEvent('corporate:startSurveillance')
+AddEventHandler('corporate:startSurveillance', function()
+    ESX.ShowNotification("~b~VIGILANCIA ACTIVADA~s~ - Sistema de monitoreo iniciado")
+    SetRadarBigmapEnabled(true, false)
+    Citizen.Wait(30000)
+    SetRadarBigmapEnabled(false, false)
+end)
+
+RegisterNetEvent('corporate:cleanEvidence')
+AddEventHandler('corporate:cleanEvidence', function()
+    ESX.ShowNotification("~g~LIMPIEZA EN PROCESO~s~ - Eliminando rastros...")
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    AddExplosion(playerCoords.x, playerCoords.y, playerCoords.z, 13, 1.0, true, false, 1.0)
+end)
+
+RegisterNetEvent('corporate:territoryControl')
+AddEventHandler('corporate:territoryControl', function()
+    ESX.ShowNotification("~r~CONTROL TERRITORIAL~s~ - Zona asegurada")
+    local playerPed = PlayerPedId()
+    SetPlayerHealthRechargeMultiplier(playerPed, 2.0)
+    Citizen.Wait(60000)
+    SetPlayerHealthRechargeMultiplier(playerPed, 1.0)
 end)
 
 -- Cargar datos al iniciar
@@ -200,7 +268,6 @@ AddEventHandler('esx:playerLoaded', function(xPlayer)
     TriggerServerEvent('throatmic:loadPlayerData')
 end)
 
--- Limpiar al desconectar
 AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() == resourceName then
         if throatMicEquipped then
@@ -209,7 +276,6 @@ AddEventHandler('onResourceStop', function(resourceName)
     end
 end)
 
--- Función SetInterval para consumo de batería
 function SetInterval(callback, interval)
     local timer = true
     Citizen.CreateThread(function()
