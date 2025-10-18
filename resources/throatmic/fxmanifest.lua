@@ -18,7 +18,6 @@ server_scripts {
 
 files {
     'html/throatmic.html',
-    'html/corporate.html',
     'html/style.css',
     'html/script.js'
 }
