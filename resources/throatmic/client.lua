@@ -1,4 +1,10 @@
-local ESX = exports["es_extended"]:getSharedObject()
+local ESX = nil
+Citizen.CreateThread(function()
+    while ESX == nil do
+        TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+        Citizen.Wait(100)
+    end
+end)
 
 -- ==================== SISTEMA THROAT MIC ====================
 local throatMicEquipped = false
@@ -124,8 +130,8 @@ RegisterKeyMapping('throatmic', 'Activar/Desactivar Throat Mic', 'keyboard', 'F'
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
         if throatMicEquipped and not micMuted then
+            Citizen.Wait(0)
             if IsControlPressed(0, Config.PTTKey) then
                 if GetGameTimer() - lastPTTTime > pttCooldown then
                     lastPTTTime = GetGameTimer()
@@ -137,6 +143,8 @@ Citizen.CreateThread(function()
                 exports['pma-voice']:setRadioVoice(false)
                 SendNUIMessage({action = 'transmitting', state = false})
             end
+        else
+            Citizen.Wait(500)
         end
     end
 end)
@@ -277,14 +285,14 @@ AddEventHandler('onResourceStop', function(resourceName)
 end)
 
 function SetInterval(callback, interval)
-    local timer = true
+    local running = true
     Citizen.CreateThread(function()
-        while timer do
+        while running do
             Citizen.Wait(interval)
-            if timer then callback() end
+            if running then callback() end
         end
     end)
-    return function() timer = false end
+    return function() running = false end
 end
 
 function ClearInterval(intervalFn)
