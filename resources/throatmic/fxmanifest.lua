@@ -1,18 +1,23 @@
 fx_version 'cerulean'
 game 'gta5'
+lua54 'yes'
 
 author 'TuServidor'
 description 'Sistema Integrado Throat Mic Pro + Corporate Elite'
-version '5.0.0'
+version '6.0.0'
 
 ui_page 'html/throatmic.html'
+
+shared_scripts {
+    '@es_extended/locale.lua'
+}
 
 client_scripts {
     'client.lua'
 }
 
 server_scripts {
-    '@mysql-async/lib/MySQL.lua',
+    '@oxmysql/lib/MySQL.lua',
     'server.lua'
 }
 
@@ -24,5 +29,12 @@ files {
 
 dependencies {
     'es_extended',
-    'pma-voice'
+    'pma-voice',
+    'oxmysql'
+}
+
+escrow_ignore {
+    'client.lua',
+    'server.lua',
+    'fxmanifest.lua'
 }
