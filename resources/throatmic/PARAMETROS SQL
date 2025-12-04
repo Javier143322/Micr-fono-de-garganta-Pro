@@ -1,2 +1,24 @@
-INSERT INTO `items` (`name`, `label`, `weight`, `rare`, `can_remove`) VALUES
-('throatmic', 'Throat Mic Pro', 1, 0, 1)
+-- ==================== THROAT MIC ITEMS ====================
+
+-- Insertar item Throat Mic
+INSERT INTO `items` (`name`, `label`, `weight`, `rare`, `can_remove`, `usable`, `description`, `limit`) 
+VALUES 
+('throatmic', 'Throat Mic Pro', 1, 0, 1, 1, 'Sistema de comunicación por micrófono de garganta profesional', -1)
+ON DUPLICATE KEY UPDATE 
+    `label` = 'Throat Mic Pro',
+    `weight` = 1,
+    `usable` = 1,
+    `description` = 'Sistema de comunicación por micrófono de garganta profesional';
+
+-- Items opcionales (si deseas agregar batería y cargador)
+INSERT INTO `items` (`name`, `label`, `weight`, `rare`, `can_remove`, `usable`, `description`, `limit`) 
+VALUES 
+('throatmic_battery', 'Batería Throat Mic', 0.2, 0, 1, 0, 'Batería de repuesto para el Throat Mic Pro', -1),
+('throatmic_charger', 'Cargador Throat Mic', 0.5, 0, 1, 1, 'Cargador para Throat Mic Pro', -1)
+ON DUPLICATE KEY UPDATE 
+    `label` = VALUES(`label`),
+    `weight` = VALUES(`weight`),
+    `description` = VALUES(`description`);
+
+-- Verificar que los items fueron insertados
+SELECT * FROM `items` WHERE `name` LIKE 'throatmic%';
